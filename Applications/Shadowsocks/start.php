@@ -111,7 +111,7 @@ function parse_socket5_header($buffer)
         case ADDRTYPE_HOST:
             $addrlen = ord($buffer[1]);
             $dest_addr = substr($buffer, 2, $addrlen);
-            $port_data = unpack('n', 2 + $addrlen, 2);
+            $port_data = unpack('n', substr(2 + $addrlen, 2));
             $dest_port = $port_data[1];
             $header_length = $addrlen + 4;
             break;
