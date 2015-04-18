@@ -90,7 +90,7 @@ $worker->onMessage = function($connection, $buffer)
             $remote_connection->connect();
             if(strlen($buffer) > $header_len)
             {
-                $remote_connection->send(substr($buffer,$header_len);
+                $remote_connection->send(substr($buffer,$header_len));
             }
     }
 };
