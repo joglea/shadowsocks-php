@@ -49,14 +49,8 @@ $worker->onMessage = function($connection, $buffer)
         case STAGE_INIT:
         case STAGE_ADDR:
             $buffer =$connection->encryptor->decrypt($buffer);
-            $cmd = ord($buffer[1]);
-            if($cmd != CMD_CONNECT)
-            {
-               echo "bad cmd $cmd\n";
-               $connection->close();
-               return;
-            }
             $header_data = parse_socket5_header($buffer);
+            $header_len = $header_data[4];
             if(!$header_data)
             {
                 $connection->close();
@@ -93,49 +87,35 @@ $worker->onMessage = function($connection, $buffer)
                 $connection->close();
                 $remote_connection->close();
             };
-            
+            $remote_connection->connect();
+            if(strlen($buffer) > $header_len)
+            {
+                $remote_connection->send(substr($buffer,$header_len);
+            }
     }
 };
 
 
 function parse_socket5_header($buffer)
 {
-    $addr_type = ord($buffer[3]);
+    $addr_type = ord($buffer[0]);
     switch($addr_type)
     {
         case ADDRTYPE_IPV4:
-            if(strlen($buffer) < 10)
-            {
-                echo bin2hex($buffer)."\n";
-                echo "buffer too short\n";
-                return false;
-            }
-            $dest_addr = ord($buffer[4]).'.'.ord($buffer[5]).'.'.ord($buffer[6]).'.'.ord($buffer[7]);
-            $port_data = unpack('n', substr($buffer, -2));
+            $dest_addr = ord($buffer[1]).'.'.ord($buffer[2]).'.'.ord($buffer[3]).'.'.ord($buffer[4]);
+            $port_data = unpack('n', substr($buffer, 5, 2));
             $dest_port = $port_data[1];
-            $header_length = 10;
+            $header_length = 7;
             break;
         case ADDRTYPE_HOST:
-            $addrlen = ord($buffer[4]);
-            if(strlen($buffer) < $addrlen + 5)
-            {
-                echo $buffer."\n";
-                echo bin2hex($buffer)."\n";
-                echo "buffer too short\n";
-                return false;
-            }
-            $dest_addr = substr($buffer, 5, $addrlen);
-            $port_data = unpack('n', substr($buffer, -2));
+            $addrlen = ord($buffer[1]);
+            $dest_addr = substr($buffer, 2, $addrlen);
+            $port_data = unpack('n', 2 + $addrlen, 2);
             $dest_port = $port_data[1];
-            $header_length = $addrlen + 7;
+            $header_length = $addrlen + 4;
             break;
        case ADDRTYPE_IPV6:
-            if(strlen($buffer) < 22)
-            {
-                echo "buffer too short\n";
-                return false;
-            }
-            echo "todo ipv6\n";
+            echo "todo ipv6 not support yet\n";
             return false;
        default:
             echo "unsupported addrtype $addr_type\n";
