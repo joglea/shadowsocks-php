@@ -29,9 +29,9 @@ class Encryptor
         'seed-cfb'=> array(16, 16)
     );
     
-    public static function init()
+    public static function initTable($key)
     {
-        $_ref = self::getTable($this->_key);
+        $_ref = self::getTable($key);
         self::$_encryptTable = $_ref[0];
         self::$_decryptTable = $_ref[1];
     }

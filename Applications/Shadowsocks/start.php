@@ -30,9 +30,12 @@ define('ADDRTYPE_HOST', 3);
 
 $worker = new Worker('tcp://0.0.0.0:1081');
 $worker->count = 12;
-$worker->onWorkerStart = function($worker)
+$worker->onWorkerStart = function($worker)use($PASSWORD, $METHOD)
 {
-    Encryptor::init();
+    if($METHOD == 'table')
+    {
+        Encryptor::initTable($PASSWORD);
+    }
 };
 $worker->onConnect = function($connection)use($METHOD, $PASSWORD)
 {
