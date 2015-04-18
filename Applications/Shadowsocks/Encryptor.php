@@ -28,6 +28,13 @@ class Encryptor
         'rc4-md5'=> array(16, 16),
         'seed-cfb'=> array(16, 16)
     );
+    
+    public static function init()
+    {
+        $_ref = self::getTable($this->_key);
+        self::$_encryptTable = $_ref[0];
+        self::$_decryptTable = $_ref[1];
+    }
 
     public function __construct($key, $method)
     {
