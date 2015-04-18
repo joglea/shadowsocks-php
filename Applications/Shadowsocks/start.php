@@ -28,7 +28,7 @@ define('ADDRTYPE_IPV6', 4);
 define('ADDRTYPE_HOST', 3);
 
 
-$worker = new Worker('tcp://0.0.0.0:1080');
+$worker = new Worker('tcp://0.0.0.0:1081');
 $worker->count = 12;
 $worker->onWorkerStart = function($worker)
 {
