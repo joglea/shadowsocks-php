@@ -48,7 +48,7 @@ $worker->onMessage = function($connection, $buffer)
     {
         case STAGE_INIT:
         case STAGE_ADDR:
-            $buffer =$connection->encryptor->decrypt($buffer);
+            $buffer = $connection->encryptor->decrypt($buffer);
             $header_data = parse_socket5_header($buffer);
             $header_len = $header_data[4];
             if(!$header_data)
@@ -59,7 +59,7 @@ $worker->onMessage = function($connection, $buffer)
             $remote_connection = new AsyncTcpConnection('tcp://'.$header_data[1].':'.$header_data[2]);
             $remote_connection->onConnect = function($remote_connection)use($connection)
             {
-                $connection->state = STAGE_STREAM;
+                
             };
             $remote_connection->onMessage = function($remote_connection, $buffer)use($connection)
             {
@@ -88,6 +88,7 @@ $worker->onMessage = function($connection, $buffer)
                 $remote_connection->close();
             };
             $remote_connection->connect();
+            $connection->state = STAGE_STREAM;
             if(strlen($buffer) > $header_len)
             {
                 $remote_connection->send(substr($buffer,$header_len));
