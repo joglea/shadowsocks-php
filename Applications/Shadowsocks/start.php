@@ -71,8 +71,9 @@ $worker->onMessage = function($connection, $buffer)
             // 解析得到实际请求地址及端口
             $host = $header_data[1];
             $port = $header_data[2];
+            $address = "tcp://$host:$port";
             // 异步建立与实际服务器的远程连接
-            $remote_connection = new AsyncTcpConnection("tcp://$host:$port");
+            $remote_connection = new AsyncTcpConnection($address);
             // 远程连接的发送缓冲区满，则停止读取shadowsocks客户端发来的数据
             $remote_connection->onBufferFull = function($remote_connection)use($connection)
             {
@@ -94,9 +95,9 @@ $worker->onMessage = function($connection, $buffer)
                 $connection->close();
             };
             // 远程连接发生错误时（一般是建立连接失败错误），关闭shadowsocks客户端的连接
-            $remote_connection->onError = function($remote_connection, $code, $msg)use($connection)
+            $remote_connection->onError = function($remote_connection, $code, $msg)use($connection, $address)
             {
-                echo "remote_connection error $code $msg\n";
+                echo "remote_connection $address error code:$code msg:$msg\n";
                 $connection->close();
             };
             // shadowsocks客户端的连接发送缓冲区满时，则停止读取远程服务端的数据
@@ -122,7 +123,7 @@ $worker->onMessage = function($connection, $buffer)
             // 当shadowsocks客户端连接上有错误时，关闭远程服务端连接
             $connection->onError = function($connection, $code, $msg)use($remote_connection)
             {
-                echo "connection err $code $msg\n";
+                echo "connection err code:$code msg:$msg\n";
                 $connection->close();
                 $remote_connection->close();
             };
