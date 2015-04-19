@@ -57,6 +57,14 @@ $worker->onMessage = function($connection, $buffer)
                 return;
             }
             $remote_connection = new AsyncTcpConnection('tcp://'.$header_data[1].':'.$header_data[2]);
+            $remote_connection->onBufferFull = function($remote_connection)use($connection)
+            {
+                $connection->pauseRecv();
+            };
+            $remote_connection->onBufferDrain = function($remote_connection)use($connection)
+            {
+                $connection->resumeRecv();
+            };
             $remote_connection->onMessage = function($remote_connection, $buffer)use($connection)
             {
                 $connection->send($connection->encryptor->encrypt($buffer));
@@ -69,6 +77,14 @@ $worker->onMessage = function($connection, $buffer)
             {
                 $connection->close();
             };
+            $connection->onBufferFull = function($connection)use($remote_connection)
+            {
+                $remote_connection->pauseRecv();
+            };
+            $connection->onBufferDrain = function($connection)use($remote_connection)
+            {
+                $remote_connection->resumeRecv();
+            };
             $connection->onMessage = function($connection, $data)use($remote_connection)
             {
                 $remote_connection->send($connection->encryptor->decrypt($data));
@@ -77,9 +93,9 @@ $worker->onMessage = function($connection, $buffer)
             {
                 $remote_connection->close();
             };
-            $connection->onError = function($connection)use($remote_connection)
+            $connection->onError = function($connection, $code, $msg)use($remote_connection)
             {
-                echo "connection err\n";
+                echo "connection err $code $msg\n";
                 $connection->close();
                 $remote_connection->close();
             };
