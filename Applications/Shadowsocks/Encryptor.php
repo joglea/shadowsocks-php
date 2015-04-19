@@ -1,5 +1,8 @@
 <?php
-
+/**
+ * 加密解密类
+ * @author walkor<walkor@workerman.net>
+ */
 class Encryptor
 {
     protected $_key;
@@ -46,9 +49,8 @@ class Encryptor
         }
         if($this->_method)
         {
-            //$iv_size = mcrypt_get_iv_size($this->_method, MCRYPT_MODE_CFB);
-            //$iv = mcrypt_create_iv($iv_size, MCRYPT_RAND); 
-            $iv = "11111111111111111111111111111111";
+            $iv_size = mcrypt_get_iv_size($this->_method, MCRYPT_MODE_CFB);
+            $iv = mcrypt_create_iv($iv_size, MCRYPT_RAND); 
             $this->_cipher = $this->getcipher($this->_key, $this->_method, 1, $iv);
         }
         else
@@ -128,10 +130,8 @@ class Encryptor
         {
           $this->_cipherIv = substr($iv, 0, $m[1]);
         }
-        //echo "%%%%%%%%%%%%%%%%%$iv\n";
 
         $iv = substr($iv, 0, $m[1]);
-        //echo "%%%%%%%%%%%%%%%%%$iv\n";
         if ($method === 'rc4-md5') 
         {
           return createRc4Md5Cipher($key, $iv, $op);
