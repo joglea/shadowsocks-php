@@ -3,9 +3,12 @@ use \Workerman\Worker;
 use \Workerman\WebServer;
 use \Workerman\Connection\TcpConnection;
 use \Workerman\Connection\AsyncTcpConnection;
+use \Workerman\Autoloader;
 
 // 自动加载类
 require_once __DIR__ . '/../../Workerman/Autoloader.php';
+
+Autoloader::setRootPath(__DIR__);
 
 $METHOD = 'table';
 $PASSWORD = 'workerman';
@@ -104,7 +107,7 @@ function parse_socket5_header($buffer)
         case ADDRTYPE_HOST:
             $addrlen = ord($buffer[1]);
             $dest_addr = substr($buffer, 2, $addrlen);
-            $port_data = unpack('n', substr(2 + $addrlen, 2));
+            $port_data = unpack('n', substr($buffer, 2 + $addrlen, 2));
             $dest_port = $port_data[1];
             $header_length = $addrlen + 4;
             break;
