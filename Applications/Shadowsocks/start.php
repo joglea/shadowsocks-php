@@ -50,7 +50,7 @@ $worker->onMessage = function($connection, $buffer)
         case STAGE_ADDR:
             $buffer = $connection->encryptor->decrypt($buffer);
             $header_data = parse_socket5_header($buffer);
-            $header_len = $header_data[4];
+            $header_len = $header_data[3];
             if(!$header_data)
             {
                 $connection->close();
