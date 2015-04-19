@@ -30,13 +30,10 @@ define('ADDRTYPE_HOST', 3);
 
 $worker = new Worker('tcp://0.0.0.0:1081');
 $worker->count = 12;
-$worker->onWorkerStart = function($worker)use($PASSWORD, $METHOD)
+if($METHOD == 'table')
 {
-    if($METHOD == 'table')
-    {
-        Encryptor::initTable($PASSWORD);
-    }
-};
+    Encryptor::initTable($PASSWORD);
+}
 $worker->onConnect = function($connection)use($METHOD, $PASSWORD)
 {
     $connection->stage = STAGE_INIT;
@@ -57,10 +54,6 @@ $worker->onMessage = function($connection, $buffer)
                 return;
             }
             $remote_connection = new AsyncTcpConnection('tcp://'.$header_data[1].':'.$header_data[2]);
-            $remote_connection->onConnect = function($remote_connection)use($connection)
-            {
-                
-            };
             $remote_connection->onMessage = function($remote_connection, $buffer)use($connection)
             {
                 $connection->send($connection->encryptor->encrypt($buffer));
