@@ -590,7 +590,8 @@ class TcpConnection extends ConnectionInterface
         Worker::$globalEvent->del($this->_socket, EventInterface::EV_WRITE);
         // 关闭socket
         @fclose($this->_socket);
-        
+        // 统计数据
+        self::$statistics['connection_count']--;
         // 从连接中删除
         if($this->worker)
         {
@@ -611,11 +612,5 @@ class TcpConnection extends ConnectionInterface
                echo $e;
            }
        }
-    }
-    
-    public function __destruct()
-    {
-        // 统计数据
-        self::$statistics['connection_count']--;
     }
 }

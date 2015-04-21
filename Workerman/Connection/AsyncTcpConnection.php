@@ -128,6 +128,7 @@ class AsyncTcpConnection extends TcpConnection
         }
         else
         {
+            $this->_status = self::STATUS_CLOSED;
             // 连接未建立成功
             $this->emitError(WORKERMAN_CONNECT_FAIL, 'connect fail');
         }
