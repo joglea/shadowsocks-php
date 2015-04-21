@@ -49,7 +49,7 @@ $worker->onConnect = function($connection)use($METHOD, $PASSWORD)
     $connection->encryptor = new Encryptor($PASSWORD, $METHOD);
 };
 
-// 当shadowsocks客户端发来消息时
+
 $worker->onMessage = function($connection, $buffer)
 {
     // 判断当前连接的状态
@@ -76,58 +76,63 @@ $worker->onMessage = function($connection, $buffer)
             $address = "tcp://$host:$port";
             // 异步建立与实际服务器的远程连接
             $remote_connection = new AsyncTcpConnection($address);
+            $connection->opposite = $remote_connection;
+            $remote_connection->opposite = $connection;
             // 远程连接的发送缓冲区满，则停止读取shadowsocks客户端发来的数据
-            $remote_connection->onBufferFull = function($remote_connection)use($connection)
+            $remote_connection->onBufferFull = function($remote_connection)
             {
-                $connection->pauseRecv();
+                $remote_connection->opposite->pauseRecv();
             };
             // 远程连接的发送缓冲区发送完毕后，则恢复读取shadowsocks客户端发来的数据
-            $remote_connection->onBufferDrain = function($remote_connection)use($connection)
+            $remote_connection->onBufferDrain = function($remote_connection)
             {
-                $connection->resumeRecv();
+                $remote_connection->opposite->resumeRecv();
             };
             // 远程连接发来消息时，进行加密，转发给shadowsocks客户端，shadowsocks客户端会解密转发给浏览器
-            $remote_connection->onMessage = function($remote_connection, $buffer)use($connection)
+            $remote_connection->onMessage = function($remote_connection, $buffer)
             {
-                $connection->send($connection->encryptor->encrypt($buffer));
+                $remote_connection->opposite->send($remote_connection->opposite->encryptor->encrypt($buffer));
             };
             // 远程连接断开时，则断开shadowsocks客户端的连接
-            $remote_connection->onClose = function($remote_connection)use($connection)
+            $remote_connection->onClose = function($remote_connection)
             {
-                $connection->close();
+                $remote_connection->opposite->close();
+                $remote_connection->opposite = null;
             };
             // 远程连接发生错误时（一般是建立连接失败错误），关闭shadowsocks客户端的连接
-            $remote_connection->onError = function($remote_connection, $code, $msg)use($connection, $address)
+            $remote_connection->onError = function($remote_connection, $code, $msg)use($address)
             {
                 echo "remote_connection $address error code:$code msg:$msg\n";
-                $connection->close();
+                $remote_connection->close();
+                $remote_connection->opposite->close();
             };
             // shadowsocks客户端的连接发送缓冲区满时，则停止读取远程服务端的数据
-            $connection->onBufferFull = function($connection)use($remote_connection)
+            $connection->onBufferFull = function($connection)
             {
-                $remote_connection->pauseRecv();
+                $connection->opposite->pauseRecv();
             };
             // 当shadowsocks客户端的连接发送缓冲区发送完毕后，继续读取远程服务端的数据
-            $connection->onBufferDrain = function($connection)use($remote_connection)
+            $connection->onBufferDrain = function($connection)
             {
-                $remote_connection->resumeRecv();
+                $connection->opposite->resumeRecv();
             };
             // 当shadowsocks客户端发来数据时，解密数据，并发给远程服务端
-            $connection->onMessage = function($connection, $data)use($remote_connection)
+            $connection->onMessage = function($connection, $data)
             {
-                $remote_connection->send($connection->encryptor->decrypt($data));
+                $connection->opposite->send($connection->encryptor->decrypt($data));
             };
             // 当shadowsocks客户端关闭连接时，关闭远程服务端的连接
-            $connection->onClose = function($connection)use($remote_connection)
+            $connection->onClose = function($connection)
             {
-                $remote_connection->close();
+                $connection->opposite->close();
+                $connection->opposite = null;
             };
             // 当shadowsocks客户端连接上有错误时，关闭远程服务端连接
-            $connection->onError = function($connection, $code, $msg)use($remote_connection)
+            $connection->onError = function($connection, $code, $msg)
             {
                 echo "connection err code:$code msg:$msg\n";
                 $connection->close();
-                $remote_connection->close();
+                $connection->opposite->close();
             };
             // 执行远程连接
             $remote_connection->connect();
