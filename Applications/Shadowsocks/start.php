@@ -132,7 +132,10 @@ $worker->onMessage = function($connection, $buffer)
             {
                 echo "connection err code:$code msg:$msg\n";
                 $connection->close();
-                $connection->opposite->close();
+                if(isset($connection->opposite))
+                {
+                    $connection->opposite->close();
+                }
             };
             // 执行远程连接
             $remote_connection->connect();
